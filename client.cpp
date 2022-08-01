@@ -8,63 +8,84 @@
 #include <unistd.h>
 #include <netdb.h>
 
-int main() {
+
+
+int main()
+{
+    
+
+
     int client;
-    int portNum  = 1500;
-    bool is_exit = false;
-    int buffsize = 1024;
-    char buffer[buffsize];
-    char* ip ="127.0.0.1";
+    int portNum = 1500; 
+    bool isExit = false;
+    int bufsize = 1024;
+    char buffer[bufsize];
+    char* ip = "127.0.0.1";
 
     struct sockaddr_in server_addr;
-    client = socket(AF_INET6, SOCK_STREAM, 0);
 
-    if (client < 0) {
-        std::cout<<"Error socket ..."<<std::endl;
-        exit(1); 
+    client = socket(AF_INET, SOCK_STREAM, 0);
+
+    
+
+    if (client < 0) 
+    {
+        std::cout << "\nError establishing socket..." << std::endl;
+        exit(1);
     }
 
-    std::cout<<"socket is created"<<std::endl;
+    
 
-    server_addr.sin_family = AF_INET6;
+    std::cout << "\n=> Socket client has been created..." << std::endl;
+    
+  
+    server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(portNum);
 
-    if (connect(client, (struct sockaddr *)&server_addr, sizeof(server_addr))==0) {
-        std::cout<<"connection port num:"<<portNum<<std::endl;
-    }
+    
 
-    std::cout<<"accepting on server..."<<std::endl;
-    recv(client, buffer, buffsize, 0);
-    std::cout<<"connection confirmed"<<std::endl;
+    if (connect(client,(struct sockaddr *)&server_addr, sizeof(server_addr)) == 0)
+        std::cout << "=> Connection to the server port number: " << portNum << std::endl;
 
-    std::cout<<"Enter to send massege"<<std::endl;
+
+    std::cout << "=> Awaiting confirmation from the server..." << std::endl; 
+    recv(client, buffer, bufsize, 0);
+    std::cout << "=> Connection confirmed, you are good to go...";
+
+    std::cout << "\n\n=> Enter # to end the connection\n" << std::endl;
+
+    
 
     do {
-        std::cout<<"Client: ";
+        std::cout << "Client: ";
         do {
-            std::cin>> buffer;
-            send(client, buffer, buffsize, 0);
-            if (*buffer == '\r') {
-                send(client, buffer, buffsize, 0);
+            std::cin >> buffer;
+            send(client, buffer, bufsize, 0);
+            if (*buffer == '#') {
+                send(client, buffer, bufsize, 0);
                 *buffer = '*';
-                is_exit = true;
+                isExit = true;
             }
-        }while(*buffer != 42);
-        std::cout<<"server:";
+        } while (*buffer != '*');
+
+        std::cout << "Server: ";
         do {
-            recv(client, buffer, buffsize, 0);
-            std::cout<<buffer<<" ";
-            if (*buffer == '\r') {
+            recv(client, buffer, bufsize, 0);
+            std::cout << buffer << " ";
+            if (*buffer == '#') {
                 *buffer = '*';
-                is_exit = true;
+                isExit = true;
             }
-        }while(*buffer != 42);
-            std::cout<<std::endl;
-    }while(!is_exit);
+
+        } while (*buffer != '*');
+        std::cout << std::endl;
+
+    } while (!isExit);
+
+   
+
+    std::cout << "\n=> Connection terminated.\nGoodbye...\n";
 
     close(client);
-    
-    
     return 0;
-
 }
