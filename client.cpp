@@ -1,91 +1,68 @@
 #include <iostream>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#include <netdb.h>
+#include <string>
 #include <stdlib.h>
 #include <unistd.h>
-#include <netdb.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#define SERVER_EXIT '#'
+#define DEF_PORT 1601
+#define SERVER_IP "127.0.0.1"
+#define BUFFERSIZE 1024
 
 
 
-int main()
-{
-    
 
+bool is_client_connected(const char* msg);
 
-    int client;
-    int portNum = 1500; 
-    bool isExit = false;
-    int bufsize = 1024;
-    char buffer[bufsize];
-    char* ip = "127.0.0.1";
+int main() {
+  int client;
+  struct sockaddr_in server_adres; 
+  client = socket(AF_INET, SOCK_STREAM, 0);
+  if (client < 0) {
+    std::cout<< "Error socket not created";
+  }
 
-    struct sockaddr_in server_addr;
+  server_adres.sin_addr.s_addr = htons(INADDR_ANY);
+  server_adres.sin_family = AF_INET;
+  inet_pton(AF_INET, SERVER_IP, &server_adres.sin_addr);
+  server_adres.sin_port = htons(DEF_PORT);
+  std::cout<<"Client socket created";
+  int connect_cl = connect(client, reinterpret_cast<sockaddr*>(&server_adres), sizeof(server_adres));
+  if (connect_cl == 0) {
+    std::cout<<"connected to server"<<inet_ntoa(server_adres.sin_addr)<<"with port number:"<<DEF_PORT<<std::endl;
+  }
+  char buffer[BUFFERSIZE];
+  std::cout<<"Waiting for connection..."<<std::endl;
+  recv(client, buffer, BUFFERSIZE,0);
+  std::cout<<"connected"<<" "<<"Enter"<<SERVER_EXIT<<"to disconnect"<<std::endl;
 
-    client = socket(AF_INET, SOCK_STREAM, 0);
-
-    
-
-    if (client < 0) 
-    {
-        std::cout << "\nError establishing socket..." << std::endl;
-        exit(1);
+  while (true)
+  {
+    std::cout<<"Client:";
+    std::cin.getline(buffer, BUFFERSIZE);
+    send(client, buffer, BUFFERSIZE, 0);
+    if (is_client_connected(buffer)) {
+      break;
     }
+    std::cout<<"Server:";
+    recv(client, buffer, BUFFERSIZE, 0);
+    std::cout<<buffer;
+    if (is_client_connected(buffer)) {
+      break;
+    }
+    std::cout<<std::endl;
+  }
+  close(client);
+  std::cout<<"disconnected"<<std::endl;
+}
 
-    
-
-    std::cout << "\n=> Socket client has been created..." << std::endl;
-    
-  
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(portNum);
-
-    
-
-    if (connect(client,(struct sockaddr *)&server_addr, sizeof(server_addr)) == 0)
-        std::cout << "=> Connection to the server port number: " << portNum << std::endl;
-
-
-    std::cout << "=> Awaiting confirmation from the server..." << std::endl; 
-    recv(client, buffer, bufsize, 0);
-    std::cout << "=> Connection confirmed, you are good to go...";
-
-    std::cout << "\n\n=> Enter # to end the connection\n" << std::endl;
-
-    
-
-    do {
-        std::cout << "Client: ";
-        do {
-            std::cin >> buffer;
-            send(client, buffer, bufsize, 0);
-            if (*buffer == '#') {
-                send(client, buffer, bufsize, 0);
-                *buffer = '*';
-                isExit = true;
-            }
-        } while (*buffer != '*');
-
-        std::cout << "Server: ";
-        do {
-            recv(client, buffer, bufsize, 0);
-            std::cout << buffer << " ";
-            if (*buffer == '#') {
-                *buffer = '*';
-                isExit = true;
-            }
-
-        } while (*buffer != '*');
-        std::cout << std::endl;
-
-    } while (!isExit);
-
-   
-
-    std::cout << "\n=> Connection terminated.\nGoodbye...\n";
-
-    close(client);
-    return 0;
+bool is_client_connected(const char* msg) {
+  for(int i = 0; i < strlen(msg); ++i) {
+      if(msg[i] == SERVER_EXIT) {
+        return true;
+      }
+  }
+  return false;
 }
