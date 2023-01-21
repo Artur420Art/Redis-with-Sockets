@@ -55,7 +55,6 @@ void Server::run() {
         if (is_client_connected(buffer)) {
           break;
         }
-        std::cout << "Client: ";
         recv(server, buffer, BUFFERSIZE, 0);  
         std::string statement = buffer;
         redis.execute(statement);
