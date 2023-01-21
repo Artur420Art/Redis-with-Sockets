@@ -32,15 +32,15 @@ How to use this program
 
 First compile the server.cpp file
 
-g++ server.cpp
+make Redis
 
-./a.out
+./Redis
 
 Then compile the client.cpp file.
 
-g++ client.cpp
+make client
 
-./a.out
+./client
 
 When connection has created and everything is accepted, client can write his message and press enter to send massege.
 
