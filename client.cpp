@@ -6,11 +6,13 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include "Header/MyRedis.h"
+
 #define SERVER_EXIT '#'
 #define DEF_PORT 1601
 #define SERVER_IP "127.0.0.1"
 #define BUFFERSIZE 1024
-
+  
 bool is_client_connected(const char* msg);
 
 int main() {
@@ -40,34 +42,39 @@ int main() {
   std::cout << "connected" << " " << "Enter" << SERVER_EXIT << "to disconnect" << std::endl;
   ///------->  connecting to server
   /// ------> chat massege loop
-  while (true)
-  {
-    std::cout << "Client:";
-    std::cin.getline(buffer, BUFFERSIZE);
-    send(client, buffer, BUFFERSIZE, 0);
+    
+  while (true) {
+    try {
 
-    if (is_client_connected(buffer)) {
-      break;
-    }
-    std::cout << "Server:";
-    recv(client, buffer, BUFFERSIZE, 0);
-    std::cout << buffer;
+      std::cout << "Client: " << std::endl;
+      std::cin.getline(buffer, BUFFERSIZE);
+      send(client, buffer, BUFFERSIZE, 0);
 
-    if (is_client_connected(buffer)) {
-      break;
-    }
-    std::cout << std::endl;
-  }
-  /// ------> chat massege loop
-  std::cout << "disconnected" << std::endl;
-}
-  ///-------> disconecting
-bool is_client_connected(const char* msg) {
-  for(int i = 0; i < strlen(msg); ++i) {
-      if(msg[i] == SERVER_EXIT) {
-        return true;
+      if (is_client_connected(buffer)) {
+        break;
       }
+      std::cout << "Server:";
+      recv(client, buffer, BUFFERSIZE, 0);
+
+      if (is_client_connected(buffer)) {
+        break;
+      }
+      std::cout << std::endl;
+      
+      /// ------> chat massege loop
+      std::cout << "disconnected" << std::endl;
+    }  catch (std::exception& e) {
+      std::cout << e.what() << std::endl;
+    }
   }
-  return false;
 }
-  ///-------> disconecting
+    ///-------> disconecting
+bool is_client_connected(const char* msg) {
+    for (int i = 0; i < strlen(msg); ++i) {
+        if (msg[i] == SERVER_EXIT) {
+          return true;
+        }
+    }
+    return false;
+}
+    ///-------> disconecting

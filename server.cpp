@@ -1,17 +1,7 @@
-#include <iostream>
-#include <netdb.h>
-#include <string>
-#include <stdlib.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#define DEF_PORT 1601
-#define BUFFERSIZE 1024
-#define CLIENT_EXIT '#'
+#include "server.h"
 
-bool is_client_connected(const char* msg);
-int main() {
+
+void Server::run() {
   int client, server;
   struct sockaddr_in server_addres;
   client = socket(AF_INET, SOCK_STREAM, 0);
@@ -28,7 +18,7 @@ int main() {
 
   if (ret < 0) {
     std::cout << "Error bind faild connection" << std::endl;
-    return -1;
+    return;
   }
   socklen_t size = sizeof(server_addres);
   std::cout << "SERVER:" << "Listening client" << std::endl;
@@ -40,6 +30,7 @@ int main() {
   }
   char buffer[BUFFERSIZE];
   bool is_exit = false;
+  MyRedis redis;
   while (server > 0)
   {
     strcpy(buffer, "server connected!\n");
@@ -49,34 +40,39 @@ int main() {
 
     std::cout << "Client:";
     recv(server, buffer, BUFFERSIZE, 0);
-    std::cout << buffer << std::endl;
-
+    std::string stmnt = buffer;
+    redis.execute(stmnt);
     if (is_client_connected(buffer)) {
       is_exit = true;
     }
   
     while (!is_exit)
     {
-      std::cout << "Server:";
-      std::cin.getline(buffer, BUFFERSIZE);
-      send(server, buffer, BUFFERSIZE, 0);
-      if (is_client_connected(buffer)) {
-        break;
-      }
-      std::cout << "Client: ";
-      recv(server, buffer, BUFFERSIZE, 0);
-      std::cout << buffer << std::endl;
-      if (is_client_connected(buffer)) {
-        break;
-      }
+      try { 
+        std::cout << "Server:";
+        std::cin.getline(buffer, BUFFERSIZE);
+        send(server, buffer, BUFFERSIZE, 0);
+        if (is_client_connected(buffer)) {
+          break;
+        }
+        std::cout << "Client: ";
+        recv(server, buffer, BUFFERSIZE, 0);  
+        std::string statement = buffer;
+        redis.execute(statement);
+        if (is_client_connected(buffer)) {
+          break;
+        }
+      }  catch (std::exception& e) {
+      std::cout << e.what() << std::endl;
     }
+  }
       std::cout << "\n Disconnected" << std::endl << "good bye";
       is_exit = false;
       exit(1);
     }
 }
 
-bool is_client_connected(const char* msg) {
+bool Server::is_client_connected(const char* msg) {
   for(int i = 0; i < strlen(msg); ++i) {
       if(msg[i] == CLIENT_EXIT) {
         return true;
