@@ -53,7 +53,7 @@ int main() {
       if (is_client_connected(buffer)) {
         break;
       }
-      std::cout << "Server:";
+//       std::cout << "Server:";
       recv(client, buffer, BUFFERSIZE, 0);
 
       if (is_client_connected(buffer)) {
@@ -62,11 +62,12 @@ int main() {
       std::cout << std::endl;
       
       /// ------> chat massege loop
-      std::cout << "disconnected" << std::endl;
+   
     }  catch (std::exception& e) {
       std::cout << e.what() << std::endl;
     }
   }
+     std::cout << "disconnected" << std::endl;
 }
     ///-------> disconecting
 bool is_client_connected(const char* msg) {
